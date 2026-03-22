@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Review Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gray-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useState } = React;
+
+ const mockData = [
+  {
+    issue: "Delivery Delay",
+    count: 3,
+    sentimentBreakdown: {
+      positive: 0,
+      neutral: 1,
+      negative: 2
+    },
+    reviews: [
+      {
+        productName: "AirPods Pro",
+        review:
+          "The product quality is really good and sound clarity is amazing, but the delivery took almost a week longer than expected which was frustrating.",
+        userName: "Deepak",
+        rating: 3,
+        sentiment: "negative",
+        platform: "Amazon",
+        summary: "Good product but delayed delivery"
+      },
+      {
+        productName: "Boat Headphones",
+        review:
+          "Delivery was slightly delayed but overall experience was okay. Not too bad but could be improved.",
+        userName: "Sai",
+        rating: 3,
+        sentiment: "neutral",
+        platform: "Flipkart",
+        summary: "Minor delay in delivery"
+      },
+      {
+        productName: "Sony Earbuds",
+        review:
+          "I had to wait extra days for delivery and tracking updates were not accurate which made the experience worse.",
+        userName: "Ravi",
+        rating: 2,
+        sentiment: "negative",
+        platform: "Amazon",
+        summary: "Late delivery with poor tracking"
+      }
+    ]
+  },
+  {
+    issue: "Packaging Issue",
+    count: 2,
+    sentimentBreakdown: {
+      positive: 0,
+      neutral: 0,
+      negative: 2
+    },
+    reviews: [
+      {
+        productName: "iPhone 13",
+        review:
+          "The packaging was खराब and the box was slightly damaged when it arrived. The product inside was fine but packaging quality needs improvement.",
+        userName: "Kiran",
+        rating: 2,
+        sentiment: "negative",
+        platform: "Flipkart",
+        summary: "Damaged packaging"
+      },
+      {
+        productName: "Samsung Galaxy",
+        review:
+          "Packaging was not sealed properly and looked tampered. This made me uncomfortable even though the phone worked fine.",
+        userName: "Anil",
+        rating: 2,
+        sentiment: "negative",
+        platform: "Amazon",
+        summary: "Unsealed packaging issue"
+      }
+    ]
+  },
+  {
+    issue: "Pricing",
+    count: 2,
+    sentimentBreakdown: {
+      positive: 0,
+      neutral: 1,
+      negative: 1
+    },
+    reviews: [
+      {
+        productName: "Apple Watch",
+        review:
+          "The product is good but feels overpriced compared to similar alternatives available in the market.",
+        userName: "Sneha",
+        rating: 3,
+        sentiment: "neutral",
+        platform: "Amazon",
+        summary: "Slightly overpriced product"
+      },
+      {
+        productName: "Noise Smartwatch",
+        review:
+          "Not worth the price at all. Features are basic and performance is average, expected more at this price.",
+        userName: "Pooja",
+        rating: 2,
+        sentiment: "negative",
+        platform: "Flipkart",
+        summary: "Poor value for money"
+      }
+    ]
+  },
+  {
+    issue: "Product Quality",
+    count: 2,
+    sentimentBreakdown: {
+      positive: 1,
+      neutral: 0,
+      negative: 1
+    },
+    reviews: [
+      {
+        productName: "Dell Laptop",
+        review:
+          "Build quality is solid and performance is smooth. I am very satisfied with the purchase and would recommend it.",
+        userName: "Rahul",
+        rating: 5,
+        sentiment: "positive",
+        platform: "Amazon",
+        summary: "Excellent product quality"
+      },
+      {
+        productName: "HP Laptop",
+        review:
+          "The laptop looks good but the material feels cheap and not durable. I expected better build quality.",
+        userName: "Manoj",
+        rating: 2,
+        sentiment: "negative",
+        platform: "Flipkart",
+        summary: "Poor build quality"
+      }
+    ]
+  },
+  {
+    issue: "Customer Support",
+    count: 1,
+    sentimentBreakdown: {
+      positive: 0,
+      neutral: 0,
+      negative: 1
+    },
+    reviews: [
+      {
+        productName: "JBL Speaker",
+        review:
+          "Customer support was very slow and unhelpful. My issue took days to resolve and responses were not satisfactory.",
+        userName: "Vamsi",
+        rating: 1,
+        sentiment: "negative",
+        platform: "Amazon",
+        summary: "Poor customer support"
+      }
+    ]
+  }
+];
+    function App() {
+      const [data, setData] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(false);
+      const [openIndex, setOpenIndex] = useState(null);
+      const [filter, setFilter] = useState("all");
+
+      useEffect(() => {
+        fetch("http://localhost:5000/reviews")
+          .then(res => res.json())
+          .then(res => {
+            setData(res.data);
+            setLoading(false);
+          })
+          .catch(() => {
+            setError(true);
+            setData(mockData);
+            setLoading(false);
+          });
+      }, []);
+
+      const toggleAccordion = (index) => {
+        setOpenIndex(openIndex === index ? null : index);
+      };
+
+      const topIssue = data.reduce((max, item) =>
+        item.count > (max?.count || 0) ? item : max,
+        null
+      );
+
+      const totalReviews = data.reduce((sum, item) => sum + item.count, 0);
+
+      // 🎯 Filter logic
+      const getFilteredReviews = (reviews) => {
+        if (filter === "all") return reviews;
+        return reviews.filter(r => r.sentiment === filter);
+      };
+
+      if (loading) {
+        return (
+          <div className="flex items-center justify-center h-screen">
+            ⏳ Loading...
+          </div>
+        );
+      }
+
+      return (
+        <div className="p-6 max-w-5xl mx-auto">
+
+          <h1 className="text-2xl font-bold mb-6">
+            Review Insights Dashboard
+          </h1>
+
+          {/* ⚠️ Error */}
+          {error && (
+            <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded">
+              ⚠️ Using mock data
+            </div>
+          )}
+
+          {/* 🔝 Top Cards */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white p-4 rounded shadow">
+              <p className="text-sm text-gray-500">Total Reviews</p>
+              <p className="text-xl font-bold">{totalReviews}</p>
+            </div>
+
+            <div className="bg-white p-4 rounded shadow">
+              <p className="text-sm text-gray-500">Top Issue</p>
+              <p className="text-xl font-bold">
+                {data[0].sentimentBreakdown.negative?data[0].issue:"N/A"}
+              </p>
+            </div>
+          </div>
+
+          {/* 🎯 Sentiment Filter */}
+
+
+          {/* 📊 Chart */}
+          <div className="bg-white p-4 rounded shadow mb-6">
+            <p className="mb-3 font-medium">Issue Distribution</p>
+            {data.map((item, i) => (
+              <div key={i} className="mb-2">
+                <div className="flex justify-between text-sm">
+                  <span>{item.issue}</span>
+                  <span>{item.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2 rounded">
+                  <div
+                    className="bg-blue-500 h-2 rounded"
+                    style={{
+                      width: `${(item.count / totalReviews) * 100}%`
+                    }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mb-6 flex gap-2">
+            {["all", "positive", "neutral", "negative"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilter(type)}
+                className={`px-4 py-2 rounded text-sm capitalize
+                  ${filter === type
+                    ? "bg-blue-600 text-white"
+                    : "bg-white border"}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          {/* 📂 Accordions */}
+          {data.map((item, index) => {
+            const filteredReviews = getFilteredReviews(item.reviews);
+
+            return (
+              <div key={index} className="mb-4 bg-white rounded shadow">
+
+                <div
+                  onClick={() => toggleAccordion(index)}
+                  className="cursor-pointer p-4 flex justify-between"
+                >
+                  <div>
+                    <h2 className="font-semibold">{item.issue}</h2>
+                    <p className="text-sm text-gray-500">
+                      {item.count} reviews
+                    </p>
+                  </div>
+
+                  <span className="text-red-600 text-sm">
+                    {item.sentimentBreakdown.negative} Negative
+                  </span>
+                </div>
+
+                {openIndex === index && (
+                  <div className="border-t p-4 space-y-3">
+
+                    {/* Sentiment */}
+                    <div className="text-sm flex gap-4">
+                      <span className="text-green-600">
+                        + {item.sentimentBreakdown.positive}
+                      </span>
+                      <span className="text-yellow-600">
+                        ~ {item.sentimentBreakdown.neutral}
+                      </span>
+                      <span className="text-red-600">
+                        - {item.sentimentBreakdown.negative}
+                      </span>
+                    </div>
+
+                    {/* Reviews */}
+                    {filteredReviews.length === 0 ? (
+                      <p className="text-sm text-gray-500">
+                        No reviews for this filter
+                      </p>
+                    ) : (
+                      filteredReviews.map((r, i) => (
+                        <div key={i} className="p-3 border rounded bg-gray-50">
+                          <div className="flex justify-between">
+                            <p>{r.userName}</p>
+                            <p>⭐ {r.rating}</p>
+                          </div>
+
+                          <p className="text-xs text-gray-500">
+                            {r.platform} • {r.productName}
+                          </p>
+
+                          <p className="mt-2">{r.review}</p>
+                          
+                          <p className="text-sm text-blue-600 mt-1">
+                            <span className="text-lg text-blue-800 mt-1 font-bold" >summary:</span> {r.summary}
+                          </p>
+                        </div>
+                      ))
+                    )}
+
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
